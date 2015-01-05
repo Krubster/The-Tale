@@ -187,7 +187,6 @@ public class MainClass extends Game {
          try {
 			GameManager.loadPages();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
         this.setScreen(new MainScreen(this));
@@ -487,5 +486,23 @@ public class MainClass extends Game {
     
 	public static void Debug(String string) {
       System.out.println(string);		
+	}
+	public static void SaveOptions() {
+        File options = new File("options.txt");
+	    	try {
+				writer = new BufferedWriter(new FileWriter(options));
+
+	    	FileWriter fw = new FileWriter(options);
+            writer = new BufferedWriter(fw);
+
+            writer.write("language="+language+"\n");
+            
+            writer.flush();
+            writer.close();
+            fw.close();
+        }	
+	    	 catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

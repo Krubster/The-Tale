@@ -1,0 +1,514 @@
+package ru.alastar.game;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+
+import ru.alastar.game.lang.Entry;
+import ru.alastar.game.lang.EntryManager;
+import ru.alastar.game.lang.Language;
+import ru.alastar.game.lang.LanguageManager;
+
+import com.badlogic.gdx.Application.ApplicationType;
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.files.FileHandle;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.scenes.scene2d.ui.Label.LabelStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.List.ListStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane.ScrollPaneStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton.TextButtonStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField.TextFieldStyle;
+import com.badlogic.gdx.scenes.scene2d.ui.Window.WindowStyle;
+
+public class MainClass extends Game {
+	
+	SpriteBatch batch;
+	Texture[] textures = new Texture[25];
+    static String language = "russian";
+	public Texture curBackground;
+	public static Random random;
+	public Skin skin;
+	private static int fontSize = 16; 
+    public static BufferedWriter    writer  = null;
+    
+    public static double screenWidth;
+    public static double screenHeight;
+    
+    public static double bScreenWidth;
+    public static double bSreenHeight;
+    
+    public static Sound clickSound;
+    
+	public void create () {
+        try {
+		batch = new SpriteBatch();
+		random = new Random();
+        if (Gdx.app.getType() == ApplicationType.Desktop)
+        {
+            Gdx.graphics.setDisplayMode(
+                    Gdx.graphics.getDesktopDisplayMode().width,
+                    Gdx.graphics.getDesktopDisplayMode().height, false);
+            Gdx.graphics.setTitle("The Tale");
+        } 
+		screenWidth = (double)Gdx.graphics.getWidth();
+		screenHeight = (double)Gdx.graphics.getHeight();
+		bSreenHeight = 1024 / screenHeight;
+		bScreenWidth = 1280 / screenWidth;
+		//System.out.println(screenWidth + " " + screenHeight + " " + bScreenWidth + " " +bScreenWidth);
+		
+		/////
+		//Loading resources
+		/////
+		   //Textures
+	        	textures[0] = new Texture("textures/gui/1.jpg"); //background 1
+	        	textures[1] = new Texture("textures/gui/2.jpg"); //background 2
+	        	textures[2] = new Texture("textures/gui/3.jpg"); //background 3
+	        	textures[3] = new Texture("textures/gui/4.jpg"); //background 4
+	        	textures[4] = new Texture("textures/gui/5.jpg"); //background 5
+	        	textures[5] = new Texture("textures/gui/6.jpg"); //background 6
+	        	textures[6] = new Texture("textures/gui/badlogic.jpg"); //text field
+	        	textures[7] = new Texture("textures/gui/badlogic.jpg"); //button next
+	        	textures[8] = new Texture("textures/gui/badlogic.jpg"); //button previous
+	        	textures[9] = new Texture("textures/gui/badlogic.jpg"); //button action
+	        	textures[10] = new Texture("textures/gui/badlogic.jpg"); //book
+	        	textures[11] = new Texture("textures/gui/badlogic.jpg"); //logo
+
+           //Sounds
+	        	 clickSound = Gdx.audio.newSound(getSoundDir()[0]);	 
+
+	        	
+	     /////
+	     //Loading options
+	     /////	  
+	        File options = new File("options.txt");
+	        String optStr;
+
+	        if(!options.exists()){
+		    	writer = new BufferedWriter(new FileWriter(options));
+		    	options.createNewFile();
+		    	FileWriter fw = new FileWriter(options);
+	            writer = new BufferedWriter(fw);
+
+	            writer.write("language=russian\n");
+	            
+	            writer.flush();
+	            writer.close();
+	            fw.close();
+	        }
+	        FileReader fr = new FileReader(options);
+	        BufferedReader input = new BufferedReader(fr);
+      	     while((optStr = input.readLine()) != null)
+               {
+                if(optStr.split("=")[0].equals("language")){
+                   language = optStr.split("=")[1]; //load language preference
+               }
+              }
+	        input.close();
+	        fr.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+        
+
+        LoadLanguage();
+
+    	skin = new Skin();
+    	skin.add("logo", textures[11]);
+    	skin.add("window", new Texture("textures/gui/window.png"));
+    	skin.add("button", new Texture("textures/gui/button.jpg"));
+    	skin.add("textInput", new Texture("textures/gui/textBox.jpg"));
+    	skin.add("btnNext", new Texture("textures/gui/button.jpg"));
+    	skin.add("btnPrevious", new Texture("textures/gui/button.jpg"));
+    	skin.add("text", new Texture("textures/gui/textBox.jpg"));
+    	skin.add("select", new Texture("textures/gui/button.jpg"));
+    	
+    	TextButtonStyle txtBtnStyle = new TextButtonStyle();
+        txtBtnStyle.font = getLocaleFont();
+        txtBtnStyle.up = skin.getDrawable("button");
+        txtBtnStyle.down = skin.getDrawable("button");
+        skin.add("button", txtBtnStyle, TextButtonStyle.class);
+        
+        txtBtnStyle = new TextButtonStyle();
+        txtBtnStyle.font = getLocaleFont();
+        txtBtnStyle.up = skin.getDrawable("btnNext");
+        txtBtnStyle.down = skin.getDrawable("btnNext");
+        skin.add("btnNext", txtBtnStyle, TextButtonStyle.class);
+        
+        txtBtnStyle = new TextButtonStyle();
+        txtBtnStyle.font = getLocaleFont();
+        txtBtnStyle.up = skin.getDrawable("btnPrevious");
+        txtBtnStyle.down = skin.getDrawable("btnPrevious");
+        skin.add("btnPrevious", txtBtnStyle, TextButtonStyle.class);
+        
+        LabelStyle labelStyle = new LabelStyle();
+        labelStyle.font = getLocaleFont();
+        skin.add("label", labelStyle, LabelStyle.class);
+
+        TextFieldStyle txtFieldStyle = new TextFieldStyle();
+        txtFieldStyle.font = getLocaleFont();
+        txtFieldStyle.fontColor = new Color(1, 1, 1, 1);
+        txtFieldStyle.background = skin.getDrawable("textInput");
+        skin.add("textInput", txtFieldStyle, TextFieldStyle.class);
+        
+        WindowStyle windowStyle = new WindowStyle();
+        windowStyle.background = skin.getDrawable("window");
+        windowStyle.titleFont = getLocaleFont();
+        skin.add("window", windowStyle, WindowStyle.class);
+        
+         ScrollPaneStyle  scrollStyle = new ScrollPaneStyle();
+         scrollStyle.background = skin.getDrawable("window");
+         scrollStyle.vScroll = skin.getDrawable("button");
+         scrollStyle.vScrollKnob = skin.getDrawable("button");
+         scrollStyle.corner = skin.getDrawable("textInput");
+         skin.add("scroll", scrollStyle, ScrollPaneStyle.class);
+
+         ListStyle listStyle = new ListStyle();
+         listStyle.background = skin.getDrawable("window");
+         listStyle.font = getLocaleFont();
+         listStyle.selection = skin.getDrawable("textInput");
+         listStyle.fontColorSelected = new Color(255, 255, 0, 1);
+         listStyle.fontColorUnselected = new Color(1, 1, 1, 1);
+         skin.add("list", listStyle, ListStyle.class);
+         try {
+			GameManager.loadPages();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        this.setScreen(new MainScreen(this));
+
+	}
+	   public static String getLocalizedMessage(int res)
+	    {
+	        try
+	        {
+	            return LanguageManager.getLang(language).getLangStringById(res).strValue;
+	        } catch (Exception e)
+	        {
+	            return null;
+	        }
+	    }
+
+	    public static String getLocalizedMessage(String res)
+	    {
+	        try
+	        {
+	            return LanguageManager.getLang(language).getLangByString(res).strValue;
+	        } catch (Exception e)
+	        {
+	            e.printStackTrace();
+	            return null;
+	        }
+	    }
+
+    @SuppressWarnings("deprecation")
+    public static void LoadLanguage()
+    {
+        try
+        {
+            FileHandle[] files = getLocaleDir();
+            FileHandle[] fontTxtFiles = getFontTxtDir();
+            FileHandle[] fontFiles = getFontDataDir();
+
+            System.out.println("files amt: " + files.length);
+
+            LanguageManager.relaunchLanguageManager(1);
+
+            Language l;
+            EntryManager eM;
+
+            File fontTxtFile = null;
+            FileHandle fontFile = null;
+            File langFile;
+            FileReader fr;
+            BufferedReader br;
+            BitmapFont nFont;
+
+            String s = "";
+            String allowedCharacters = "";
+            String line = "";
+            String fontName = "";
+
+            final ArrayList<String> lines = new ArrayList<String>();
+            System.out.println("txt fonts files: " + fontTxtFiles.length);
+
+            for (int i = 0; i < files.length; ++i)
+            {
+
+                langFile = files[i].file();
+                System.out.println("file name: " + stripExtension(langFile.getName()));
+
+                if (stripExtension(langFile.getName()).equals(language))
+                {
+                    for (int f = 0; f < fontTxtFiles.length; ++f)
+                    {
+                        System.out.println(fontTxtFiles[f].name());
+                        if (fontTxtFiles[f].name().equals(langFile.getName()))
+                        {
+                            fontTxtFile = fontTxtFiles[f].file();
+                            break;
+                        }
+                    }
+                    System.out.println("file name -  " + langFile.getName());
+
+                    fr = new FileReader(langFile);
+                    br = new BufferedReader(fr);
+
+                    while ((s = br.readLine()) != null)
+                    {
+                        lines.add(s);
+                    }
+
+                    br.close();
+
+                    fr.close();
+
+                    fr = new FileReader(fontTxtFile);
+                    br = new BufferedReader(fr);
+                    allowedCharacters = br.readLine();
+                    fontName = br.readLine();
+
+                    br.close();
+                    fr.close();
+
+                    for (int f = 0; f < fontFiles.length; ++f)
+                    {
+                        if (fontFiles[f].name().equals(fontName))
+                        {
+                            fontFile = fontFiles[f];
+                            break;
+                        }
+                    }
+
+                    // System.out.println("Allowed chars for " +
+                    // langFile.getName()
+                    // + " are " + allowedCharacters);
+                    eM = new EntryManager(lines.size());
+
+                    // /////////////////
+                    // LOADING ENTRIES//
+                    // /////////////////
+                    // System.out.println(lines.size());
+                    for (int j = 0; j < lines.size(); ++j)
+                    {
+                        line = lines.get(j);
+                      //   System.out.println(line + " j = " + j);
+                        eM.addEntry(new Entry(line.split("=")[0], line
+                                .split("=")[1]));
+                    }
+                    FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
+                            fontFile);
+                    nFont = generator.generateFont(fontSize, allowedCharacters,
+                            false);
+                    l = new Language(stripExtension(langFile.getName()), eM, nFont);
+                    LanguageManager.addLang(l);
+                    System.out.println(l.langName + " loaded! ");
+                    lines.clear();
+                }
+            }
+        } catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+    }
+    
+    static String stripExtension (String str) {
+        if (str == null) return null;
+
+        int pos = str.lastIndexOf(".");
+
+        if (pos == -1) return str;
+
+        return str.substring(0, pos);
+    }
+    
+    public static BitmapFont getLocaleFont()
+    {
+        return LanguageManager.getLang(language).getFont();
+    }
+    
+    public static FileHandle[] getFontDataDir()
+    {
+        if (Gdx.app.getType().equals(ApplicationType.Desktop))
+        {
+            return Gdx.files.absolute(
+                    System.getProperty("user.dir") + "\\bin\\data\\fonts\\")
+                    .list();
+        } else if (Gdx.app.getType() == ApplicationType.Android)
+        {
+            return Gdx.files.internal("data/fonts/").list();
+        }
+        return null;
+    } 
+    public static FileHandle[] getFontTxtDir()
+    {
+        if (Gdx.app.getType().equals(ApplicationType.Desktop))
+        {
+            System.out.println(System.getProperty("user.dir")
+                    + "\\bin\\fonts\\");
+
+            return Gdx.files.absolute(
+                    System.getProperty("user.dir") + "\\bin\\fonts\\").list();
+
+        } else if (Gdx.app.getType() == ApplicationType.Android)
+        {
+            return Gdx.files.internal("fonts/").list();
+        }
+        return null;
+    }
+    
+    public static String getSavePath()
+    {
+        if (Gdx.app.getType().equals(ApplicationType.Desktop))
+        {
+            System.out.println(System.getProperty("user.dir")
+                    + "\\saves\\");
+            File saveDir = new File("saves");
+            if(!saveDir.exists())
+            {
+            	saveDir.mkdir();
+            }
+            return System.getProperty("user.dir") + "\\saves\\";
+
+        } else if (Gdx.app.getType() == ApplicationType.Android)
+        {
+            return "saves/";
+        }
+        return null;
+    }
+    
+    public static FileHandle[] getSaveDir()
+    {
+        if (Gdx.app.getType().equals(ApplicationType.Desktop))
+        {
+            System.out.println(System.getProperty("user.dir")
+                    + "\\saves\\");
+            File saveDir = new File("saves");
+            if(!saveDir.exists())
+            {
+            	saveDir.mkdir();
+            }
+            return Gdx.files.absolute(
+                    System.getProperty("user.dir") + "\\saves\\").list();
+
+        } else if (Gdx.app.getType() == ApplicationType.Android)
+        {
+            return Gdx.files.internal("saves/").list();
+        }
+        return null;
+    }
+    
+    public static FileHandle[] getMusicDir()
+    {
+        if (Gdx.app.getType().equals(ApplicationType.Desktop))
+        {
+            System.out.println(System.getProperty("user.dir")
+                    + "\\bin\\data\\music\\");
+            return Gdx.files.absolute(
+                    System.getProperty("user.dir") + "\\bin\\data\\music\\").list();
+
+        } else if (Gdx.app.getType() == ApplicationType.Android)
+        {
+            return Gdx.files.internal("data/music/").list();
+        }
+        return null;
+    }
+    
+    public static FileHandle[] getSoundDir()
+    {
+        if (Gdx.app.getType().equals(ApplicationType.Desktop))
+        {
+            System.out.println(System.getProperty("user.dir")
+                    + "\\bin\\data\\sound\\");
+            return Gdx.files.absolute(
+                    System.getProperty("user.dir") + "\\bin\\data\\sound\\").list();
+
+        } else if (Gdx.app.getType() == ApplicationType.Android)
+        {
+            return Gdx.files.internal("data/sound/").list();
+        }
+        return null;
+    }
+    public static FileHandle getPagesFileDir()
+    {
+        if (Gdx.app.getType().equals(ApplicationType.Desktop))
+        {
+            System.out.println(System.getProperty("user.dir")
+                    + "\\bin\\data\\pages\\" + language + "\\");
+            return Gdx.files.absolute(
+                    System.getProperty("user.dir") + "\\bin\\data\\pages\\"+ language + "\\").list()[0];
+
+        } else if (Gdx.app.getType() == ApplicationType.Android)
+        {
+            return Gdx.files.internal("data/pages/"+ language + "/").list()[0];
+        }
+        return null;
+    }
+    
+    public static FileHandle[] getLocaleDir()
+    {
+        if (Gdx.app.getType().equals(ApplicationType.Desktop))
+        {
+            System.out.println(System.getProperty("user.dir")
+                    + "\\bin\\languages\\");
+            return Gdx.files.absolute(
+                    System.getProperty("user.dir") + "\\bin\\languages").list();
+
+        } else if (Gdx.app.getType() == ApplicationType.Android)
+        {
+            return Gdx.files.internal("languages/").list();
+        }
+        return null;
+    }
+	@Override
+	public void render () {
+		super.render();
+	}
+	
+    public void dispose()
+    {
+        batch.dispose();
+    }
+    
+	public static void Debug(String string) {
+      System.out.println(string);		
+	}
+	public static void SaveOptions() {
+        File options = new File("options.txt");
+        String optStr;
+
+        if(!options.exists()){
+	    	try {
+				writer = new BufferedWriter(new FileWriter(options));
+
+	    	options.createNewFile();
+	    	FileWriter fw = new FileWriter(options);
+            writer = new BufferedWriter(fw);
+
+            writer.write("language="+language+"\n");
+            
+            writer.flush();
+            writer.close();
+            fw.close();
+        }	
+	    	 catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}}
+	}
+}

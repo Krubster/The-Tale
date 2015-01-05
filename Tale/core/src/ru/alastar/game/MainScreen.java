@@ -207,6 +207,7 @@ public class MainScreen implements Screen, InputProcessor, GestureListener {
 					e.printStackTrace();
 				}
 				MainClass.LoadLanguage();
+				MainClass.SaveOptions();
 				CreateGUI();
 			}
         });
@@ -228,6 +229,7 @@ public class MainScreen implements Screen, InputProcessor, GestureListener {
 					e.printStackTrace();
 				}
 				MainClass.LoadLanguage();
+				MainClass.SaveOptions();
 				CreateGUI();
 			}
         });
