@@ -1,0 +1,15 @@
+Start=Start
+Confirm=Confirm
+Options=Options
+Exit=Exit
+Name=Name
+Back=Back
+Load=Load
+Eng=English
+Rus=Russian
+Menu=Menu
+Music=Music
+On=On
+Off=Off
+Save=Save
+Delete=Delete

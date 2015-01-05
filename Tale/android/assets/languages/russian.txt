@@ -1,0 +1,15 @@
+Start=Начать
+Confirm=Подтвердить
+Options=Настройки
+Exit=Выход
+Name=Имя
+Back=Назад
+Load=Загрузить
+Eng=Английский
+Rus=Русский
+Menu=Меню
+Music=Музыка
+On=вкл.
+Off=выкл.
+Save=Сохранить
+Delete=Удалить
